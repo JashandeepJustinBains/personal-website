@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Certifications from '../components/Certifications.astro';
 import GitHubRepos from '../components/GitHubRepos.astro';
+import NetworkTopology from '../components/NetworkTopology.astro';
 
 const title = "Jashandeep Justin Bains - Network Engineer & Cloud Professional";
 const description = "Professional portfolio showcasing my networking, cloud, and software development certifications, projects, and experience. CCNA, AWS Certified, and more.";
@@ -38,9 +39,9 @@ const structuredData = {
     <h1>Welcome to My Portfolio</h1>
     <p>Network Engineer | Cloud Professional | Developer</p>
     <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-      <a href="#certifications" class="btn">View Certifications</a>
+      <a href="#homelab" class="btn">Explore My Homelab</a>
+      <a href="#certifications" class="btn btn-secondary">View Certifications</a>
       <a href="#resume" class="btn btn-secondary">Download Résumé</a>
-      <a href="https://github.com/JashandeepJustinBains" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub Profile</a>
     </div>
   </div>
 
@@ -99,6 +100,9 @@ const structuredData = {
       </div>
     </div>
   </section>
+
+  <!-- Network Topology -->
+  <NetworkTopology />
 
   <!-- Certifications -->
   <Certifications />
