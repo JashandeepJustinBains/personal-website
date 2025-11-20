@@ -11,7 +11,8 @@ A professional portfolio website built with Astro to showcase my networking, clo
   - Mobile-friendly with touch controls
   - Direct link to your homelab GitHub repository
 - **Modern Stack**: Built with Astro for fast, static site generation
-- **Networking/IT Aesthetic**: Dark theme with blue/teal color scheme inspired by network diagrams
+- **Modern Design**: Light, clean aesthetic with off-white background and professional blue accents
+- **Centralized Design System**: Programmatic CSS with design tokens for easy customization
 - **SEO Optimized**: JSON-LD structured data and comprehensive meta tags for social sharing
 - **GitHub Integration**: Automatically fetches and displays public repositories
 - **Certifications Showcase**: Display professional certifications with verification links
@@ -120,15 +121,30 @@ Edit `src/pages/index.astro` to update:
 
 ### Customize Styling
 
-All global styles are in `src/layouts/BaseLayout.astro`. Modify CSS variables to change colors:
+The website uses a centralized design system with CSS custom properties (design tokens) for consistent styling. All design tokens are defined in `src/styles/global.css`.
+
+**To customize the color scheme:**
 ```css
+/* Edit src/styles/global.css */
 :root {
-  --primary: #0066cc;      /* Main accent color */
-  --secondary: #00cc99;    /* Secondary accent */
-  --dark: #1a1a2e;         /* Background color */
-  /* ... more variables ... */
+  --color-primary: #2563eb;        /* Main accent color (blue) */
+  --color-secondary: #0ea5e9;      /* Secondary accent (sky blue) */
+  --bg-main: #fafafa;              /* Main background (off-white) */
+  --bg-secondary: #ffffff;         /* Card backgrounds (white) */
+  --text-primary: #1e293b;         /* Main text color */
+  /* ... see file for complete design tokens ... */
 }
 ```
+
+**Available design token categories:**
+- Colors (primary, secondary, backgrounds, text, borders)
+- Typography (font families, sizes, weights, line heights)
+- Spacing scale (consistent spacing throughout)
+- Border radius values
+- Shadows and transitions
+- Z-index scale
+
+This programmatic approach ensures design consistency and makes theme changes easy!
 
 ## 📦 Build for Production
 
@@ -140,13 +156,34 @@ The static files will be generated in the `dist/` directory.
 
 ## 🚢 Deployment
 
-This site is configured for GitHub Pages deployment. To deploy:
+This site is now configured for **Cloudflare Workers/Pages** deployment with a `wrangler.toml` configuration file.
 
-1. Build the site: `npm run build`
-2. The `dist/` folder contains your static site
-3. Deploy to GitHub Pages, Netlify, Vercel, or any static hosting service
+### Cloudflare Pages Deployment (Recommended)
 
-### GitHub Pages Configuration
+1. **Install Wrangler CLI** (if not already installed):
+   ```bash
+   npm install -g wrangler
+   ```
+
+2. **Build the site**:
+   ```bash
+   npm run build
+   ```
+
+3. **Deploy with Wrangler**:
+   ```bash
+   wrangler pages deploy dist
+   ```
+
+4. **Or use Git integration**:
+   - Push your code to GitHub
+   - Connect repository in Cloudflare Pages dashboard
+   - Set build command: `npm run build`
+   - Set output directory: `dist`
+
+### Alternative: GitHub Pages
+
+The site can still be deployed to GitHub Pages:
 
 The `astro.config.mjs` includes:
 ```javascript
@@ -157,6 +194,12 @@ The `astro.config.mjs` includes:
 ```
 
 Update these values if deploying to a different URL.
+
+### Configuration Files
+
+- `wrangler.toml` - Cloudflare Workers/Pages configuration
+- `astro.config.mjs` - Astro build configuration
+- See `TODO.md` for detailed deployment instructions and manual setup steps
 
 ## 📄 License
 
