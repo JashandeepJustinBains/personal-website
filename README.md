@@ -4,6 +4,12 @@ A professional portfolio website built with Astro to showcase my networking, clo
 
 ## 🌟 Features
 
+- **🖧 Interactive Network Topology**: GNS3-style diagram using Vis.js to showcase your homelab infrastructure
+  - Click nodes to view detailed server specs
+  - Visual network connections with labeled links
+  - Color-coded by server type (hypervisor, storage, network, etc.)
+  - Mobile-friendly with touch controls
+  - Direct link to your homelab GitHub repository
 - **Modern Stack**: Built with Astro for fast, static site generation
 - **Networking/IT Aesthetic**: Dark theme with blue/teal color scheme inspired by network diagrams
 - **SEO Optimized**: JSON-LD structured data and comprehensive meta tags for social sharing
@@ -57,6 +63,39 @@ const certifications = [
   // Add more certifications...
 ];
 ```
+
+### Customize Network Topology
+
+The interactive homelab diagram can be fully customized in `src/components/NetworkTopology.astro`:
+
+**Update nodes** to match your servers:
+```javascript
+const nodes = [
+  {
+    id: 1,
+    label: 'Your-Server-Name',
+    group: 'hypervisor', // or 'storage', 'network', 'application', 'security'
+    title: 'Server Description',
+    specs: {
+      cpu: 'Your CPU specs',
+      ram: 'Your RAM',
+      storage: 'Your storage configuration',
+      role: 'What this server does'
+    }
+  },
+  // Add more nodes...
+];
+```
+
+**Update connections** between nodes:
+```javascript
+const edges = [
+  { from: 1, to: 2, label: 'Connection Type' },
+  // Add more connections...
+];
+```
+
+**Update the GitHub repo link** to point to your homelab repository (currently set to `https://github.com/JashandeepJustinBains/homelab`).
 
 ### Update GitHub Username
 
