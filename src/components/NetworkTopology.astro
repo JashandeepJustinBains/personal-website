@@ -21,23 +21,23 @@
       <h4>Legend:</h4>
       <div class="legend-items">
         <div class="legend-item">
-          <span class="legend-color" style="background: #0066cc;"></span>
+          <span class="legend-color" style="background: #3b82f6;"></span>
           <span>Hypervisor</span>
         </div>
         <div class="legend-item">
-          <span class="legend-color" style="background: #00cc99;"></span>
+          <span class="legend-color" style="background: #10b981;"></span>
           <span>Storage</span>
         </div>
         <div class="legend-item">
-          <span class="legend-color" style="background: #9900cc;"></span>
+          <span class="legend-color" style="background: #8b5cf6;"></span>
           <span>Network Services</span>
         </div>
         <div class="legend-item">
-          <span class="legend-color" style="background: #cc6600;"></span>
+          <span class="legend-color" style="background: #f59e0b;"></span>
           <span>Applications</span>
         </div>
         <div class="legend-item">
-          <span class="legend-color" style="background: #cc0066;"></span>
+          <span class="legend-color" style="background: #ef4444;"></span>
           <span>Security</span>
         </div>
       </div>
@@ -47,20 +47,20 @@
 
 <style>
   .topology-container {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-base);
+    border-radius: var(--radius-md);
+    padding: var(--space-6);
+    margin-bottom: var(--space-4);
   }
   
   .topology-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: var(--space-4);
   }
   
   .topology-header p {
@@ -70,97 +70,99 @@
   
   .topology-controls {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
   
   .btn-small {
-    padding: 0.5rem 1rem;
-    background: var(--primary);
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-primary);
     color: white;
     border: none;
-    border-radius: 4px;
-    font-size: 0.875rem;
+    border-radius: var(--radius-base);
+    font-size: var(--text-sm);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: var(--transition-all);
   }
   
   .btn-small:hover {
-    background: var(--primary-dark);
+    background: var(--color-primary-dark);
     transform: translateY(-1px);
   }
   
   .network-diagram {
     width: 100%;
     height: 600px;
-    background: #0a0a0f;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    margin-bottom: 1rem;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-base);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-4);
   }
   
   .node-info-panel {
-    background: var(--dark-lighter);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-base);
+    border-radius: var(--radius-md);
+    padding: var(--space-8);
     min-height: 150px;
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
   }
   
   .node-info-panel h3 {
-    color: var(--primary);
-    margin-bottom: 0.5rem;
-    font-size: 1.25rem;
+    color: var(--text-primary);
+    margin-bottom: var(--space-3);
+    font-size: var(--text-2xl);
+    font-weight: var(--font-semibold);
   }
   
   .node-info-panel p {
     color: var(--text-muted);
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-3);
   }
   
   .node-info-panel .specs {
-    margin-top: 1rem;
+    margin-top: var(--space-6);
   }
   
   .node-info-panel .specs strong {
-    color: var(--secondary);
+    color: var(--color-primary);
   }
   
   .node-info-panel .repo-link {
-    margin-top: 1rem;
+    margin-top: var(--space-4);
     display: inline-block;
   }
   
   .topology-legend {
-    background: var(--dark-lighter);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-base);
+    border-radius: var(--radius-md);
+    padding: var(--space-6);
   }
   
   .topology-legend h4 {
-    color: var(--secondary);
-    margin-bottom: 0.75rem;
-    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
   }
   
   .legend-items {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: var(--space-4);
   }
   
   .legend-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
   
   .legend-color {
     width: 20px;
     height: 20px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-base);
   }
   
   @media (max-width: 768px) {
@@ -371,7 +373,7 @@
     label: node.label,
     title: node.title,
     group: node.group,
-    font: { color: '#e8e8e8', size: 14 },
+    font: { color: '#ffffff', size: 14 },
     specs: node.specs
   }));
   
@@ -391,33 +393,33 @@
         maximum: 150
       },
       font: {
-        color: '#e8e8e8',
+        color: '#1e293b',
         size: 14,
-        face: 'Segoe UI, sans-serif'
+        face: 'Inter, system-ui, sans-serif'
       },
       borderWidth: 2,
       borderWidthSelected: 3,
       shadow: {
         enabled: true,
-        color: 'rgba(0, 102, 204, 0.5)',
+        color: 'rgba(0, 0, 0, 0.1)',
         size: 10,
         x: 0,
-        y: 0
+        y: 2
       }
     },
     edges: {
       width: 2,
       color: {
-        color: '#4a5568',
-        highlight: '#00cc99',
-        hover: '#0066cc'
+        color: '#94a3b8',
+        highlight: '#2563eb',
+        hover: '#3b82f6'
       },
       smooth: {
         type: 'continuous',
         roundness: 0.5
       },
       font: {
-        color: '#a0a0a0',
+        color: '#64748b',
         size: 11,
         strokeWidth: 0
       }
@@ -425,49 +427,49 @@
     groups: {
       hypervisor: {
         color: {
-          background: '#0066cc',
-          border: '#004c99',
-          highlight: { background: '#0080ff', border: '#0066cc' }
+          background: '#3b82f6',
+          border: '#2563eb',
+          highlight: { background: '#60a5fa', border: '#3b82f6' }
         },
         shape: 'box'
       },
       storage: {
         color: {
-          background: '#00cc99',
-          border: '#009973',
-          highlight: { background: '#00ffbf', border: '#00cc99' }
+          background: '#10b981',
+          border: '#059669',
+          highlight: { background: '#34d399', border: '#10b981' }
         },
         shape: 'box'
       },
       network: {
         color: {
-          background: '#9900cc',
-          border: '#7700a3',
-          highlight: { background: '#b300ff', border: '#9900cc' }
+          background: '#8b5cf6',
+          border: '#7c3aed',
+          highlight: { background: '#a78bfa', border: '#8b5cf6' }
         },
         shape: 'box'
       },
       application: {
         color: {
-          background: '#cc6600',
-          border: '#a35200',
-          highlight: { background: '#ff8000', border: '#cc6600' }
+          background: '#f59e0b',
+          border: '#d97706',
+          highlight: { background: '#fbbf24', border: '#f59e0b' }
         },
         shape: 'box'
       },
       security: {
         color: {
-          background: '#cc0066',
-          border: '#a30052',
-          highlight: { background: '#ff0080', border: '#cc0066' }
+          background: '#ef4444',
+          border: '#dc2626',
+          highlight: { background: '#f87171', border: '#ef4444' }
         },
         shape: 'box'
       },
       external: {
         color: {
-          background: '#666666',
-          border: '#444444',
-          highlight: { background: '#888888', border: '#666666' }
+          background: '#64748b',
+          border: '#475569',
+          highlight: { background: '#94a3b8', border: '#64748b' }
         },
         shape: 'diamond'
       }
