@@ -1,15 +1,138 @@
 ---
-// Interactive GNS3-style network topology diagram
+// Interactive GNS3-style network topology diagram showing Kubernetes pods
 import portfolioData from '../../portfolio-data.json';
 
-const { nodes: topologyNodes, edges: topologyEdges } = portfolioData.network_topology;
+const { nodes: physicalNodes } = portfolioData.network_topology;
+
+// Transform physical nodes and their services into a pod-centric topology
+const pods = [];
+const connections = [];
+let nodeId = 1;
+
+// Extract all pods/services from physical nodes
+physicalNodes.forEach(physNode => {
+  if (physNode.services) {
+    physNode.services.forEach(service => {
+      // Skip generic services, focus on actual pods
+      if (service.name !== 'General Compute Workloads' && service.name !== 'Storage Workloads') {
+        pods.push({
+          id: nodeId++,
+          label: service.name,
+          group: getServiceGroup(service.name),
+          physicalNode: physNode.label,
+          physicalNodeColor: physNode.color,
+          port: service.port,
+          url: service.url,
+          description: service.description,
+          hostIP: physNode.ip
+        });
+      }
+    });
+  }
+});
+
+// Create connections based on Kubernetes architecture
+// Prometheus scrapes Node Exporters
+const prometheus = pods.find(p => p.label === 'Prometheus');
+const nodeExporters = pods.filter(p => p.label === 'Node Exporter');
+nodeExporters.forEach(exporter => {
+  connections.push({
+    from: prometheus.id,
+    to: exporter.id,
+    label: 'scrape',
+    color: '#16a34a',
+    dashes: true
+  });
+});
+
+// Promtails send logs to Loki
+const loki = pods.find(p => p.label === 'Loki');
+const promtails = pods.filter(p => p.label === 'Promtail');
+promtails.forEach(promtail => {
+  connections.push({
+    from: promtail.id,
+    to: loki.id,
+    label: 'logs',
+    color: '#ea580c',
+    dashes: true
+  });
+});
+
+// Grafana queries Prometheus and Loki
+const grafana = pods.find(p => p.label === 'Grafana');
+connections.push({
+  from: grafana.id,
+  to: prometheus.id,
+  label: 'query',
+  color: '#f59e0b',
+  dashes: [5, 5]
+});
+connections.push({
+  from: grafana.id,
+  to: loki.id,
+  label: 'query',
+  color: '#f59e0b',
+  dashes: [5, 5]
+});
+
+// All pods connect to API Server
+const apiServer = pods.find(p => p.label === 'Kubernetes API Server');
+pods.forEach(pod => {
+  if (pod.label !== 'Kubernetes API Server' && pod.label !== 'etcd') {
+    connections.push({
+      from: pod.id,
+      to: apiServer.id,
+      label: '',
+      color: '#64748b',
+      width: 1
+    });
+  }
+});
+
+// API Server connects to etcd
+const etcd = pods.find(p => p.label === 'etcd');
+connections.push({
+  from: apiServer.id,
+  to: etcd.id,
+  label: 'state',
+  color: '#2563eb',
+  width: 3
+});
+
+// CoreDNS provides DNS for all pods
+const coreDNS = pods.find(p => p.label === 'CoreDNS');
+pods.forEach(pod => {
+  if (pod.label !== 'CoreDNS' && pod.label !== 'Kubernetes API Server' && pod.label !== 'etcd') {
+    connections.push({
+      from: pod.id,
+      to: coreDNS.id,
+      label: '',
+      color: '#8b5cf6',
+      width: 1,
+      dashes: [2, 4]
+    });
+  }
+});
+
+function getServiceGroup(serviceName) {
+  const controlPlane = ['Kubernetes API Server', 'etcd', 'CoreDNS'];
+  const monitoring = ['Prometheus', 'Grafana', 'Loki'];
+  const agents = ['Node Exporter', 'Promtail'];
+  const applications = ['Jellyfin'];
+  
+  if (controlPlane.includes(serviceName)) return 'control-plane';
+  if (monitoring.includes(serviceName)) return 'monitoring';
+  if (agents.includes(serviceName)) return 'agent';
+  if (applications.includes(serviceName)) return 'application';
+  return 'workload';
+}
 ---
 
 <section id="homelab">
   <h2>Homelab Network Topology</h2>
   <div class="topology-container">
     <div class="topology-header">
-      <p>Interactive diagram of VMStation - A 3-node Kubernetes homelab with automated deployment, monitoring, and smart power management</p>
+      <p>Interactive Kubernetes pod topology showing services and their connections across the 3-node VMStation cluster</p>
       <div class="topology-controls">
         <button id="resetView" class="btn-small">Reset View</button>
         <button id="togglePhysics" class="btn-small">Toggle Physics</button>
@@ -21,39 +144,39 @@ const { nodes: topologyNodes, edges: topologyEdges } = portfolioData.network_top
       <p>Click on any server or device in the topology to see specifications and role information.</p>
     </div>
     <div class="topology-legend">
-      <h4>Legend:</h4>
+      <h4>Pod Types:</h4>
       <div class="legend-items">
         <div class="legend-item">
           <span class="legend-color" style="background: #2563eb;"></span>
-          <span>Control Plane (Always-On)</span>
+          <span>Control Plane (API Server, etcd, CoreDNS)</span>
         </div>
         <div class="legend-item">
           <span class="legend-color" style="background: #16a34a;"></span>
-          <span>Storage Worker (Auto-Sleep)</span>
+          <span>Monitoring (Prometheus, Grafana, Loki)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background: #8b5cf6;"></span>
+          <span>Agents (Node Exporter, Promtail)</span>
         </div>
         <div class="legend-item">
           <span class="legend-color" style="background: #ea580c;"></span>
-          <span>Compute Worker (Auto-Sleep)</span>
+          <span>Applications (Jellyfin, etc.)</span>
         </div>
       </div>
       <div style="margin-top: 1rem;">
-        <h4>Connection Types:</h4>
+        <h4>Physical Nodes:</h4>
         <div class="legend-items">
           <div class="legend-item">
-            <div style="width: 30px; height: 2px; background: #2563eb;"></div>
-            <span>Kubernetes Control / CNI</span>
+            <div style="width: 20px; height: 20px; background: #2563eb; opacity: 0.2; border-radius: 3px;"></div>
+            <span>masternode (192.168.4.63) - Always On</span>
           </div>
           <div class="legend-item">
-            <div style="width: 30px; height: 2px; background: #16a34a; border-top: 2px dashed #16a34a;"></div>
-            <span>Prometheus Metrics</span>
+            <div style="width: 20px; height: 20px; background: #16a34a; opacity: 0.2; border-radius: 3px;"></div>
+            <span>storagenodet3500 (192.168.4.61) - Auto-Sleep</span>
           </div>
           <div class="legend-item">
-            <div style="width: 30px; height: 2px; background: #ea580c; border-top: 2px dashed #ea580c;"></div>
-            <span>Log Aggregation (Loki)</span>
-          </div>
-          <div class="legend-item">
-            <div style="width: 30px; height: 2px; background: #9333ea; border-top: 2px dashed #9333ea;"></div>
-            <span>Wake-on-LAN</span>
+            <div style="width: 20px; height: 20px; background: #ea580c; opacity: 0.2; border-radius: 3px;"></div>
+            <span>homelab (192.168.4.62) - Auto-Sleep</span>
           </div>
         </div>
       </div>
@@ -205,41 +328,40 @@ const { nodes: topologyNodes, edges: topologyEdges } = portfolioData.network_top
 <script>
   import { Network } from 'vis-network/standalone';
   
-  // Load VMStation homelab topology data from portfolio-data.json
-  const portfolioData = await fetch('/portfolio-data.json').then(r => r.json());
-  const { nodes: topologyNodes, edges: topologyEdges } = portfolioData.network_topology;
+  // Store Network class globally for use in the data script
+  window.VisNetwork = Network;
+</script>
+
+<script define:vars={{ pods, connections, physicalNodes }}>
+  // Use the globally stored Network class
+  const Network = window.VisNetwork;
   
-  // Transform portfolio data nodes to vis-network format
-  const nodes = topologyNodes.map(node => ({
-    id: node.id,
-    label: node.label,
-    group: node.group,
-    title: node.title,
-    specs: {
-      ...node.specs,
-      ip: node.ip,
-      status: node.status,
-      ...node.specs
-    },
-    features: node.features,
-    services: node.services,
-    color: node.color
+  // Transform pods to vis-network format
+  const nodes = pods.map(pod => ({
+    id: pod.id,
+    label: pod.label,
+    group: pod.group,
+    title: `${pod.label}\nHost: ${pod.physicalNode}\nIP: ${pod.hostIP}${pod.port ? '\nPort: ' + pod.port : ''}`,
+    physicalNode: pod.physicalNode,
+    physicalNodeColor: pod.physicalNodeColor,
+    port: pod.port,
+    url: pod.url,
+    description: pod.description,
+    hostIP: pod.hostIP
   }));
   
-  // Transform portfolio data edges to vis-network format
-  const edges = topologyEdges.map(edge => {
-    const edgeConfig: any = {
-      from: edge.from,
-      to: edge.to,
-      label: edge.label
+  // Transform connections to vis-network format
+  const edges = connections.map(conn => {
+    const edgeConfig = {
+      from: conn.from,
+      to: conn.to,
+      label: conn.label || '',
+      color: { color: conn.color || '#94a3b8' },
+      width: conn.width || 2
     };
     
-    if (edge.color) {
-      edgeConfig.color = { color: edge.color };
-    }
-    
-    if (edge.dashes) {
-      edgeConfig.dashes = Array.isArray(edge.dashes) ? edge.dashes : true;
+    if (conn.dashes) {
+      edgeConfig.dashes = Array.isArray(conn.dashes) ? conn.dashes : true;
     }
     
     return edgeConfig;
@@ -303,16 +425,17 @@ const { nodes: topologyNodes, edges: topologyEdges } = portfolioData.network_top
       }
     },
     groups: {
-      hypervisor: {
+      'control-plane': {
         color: {
           background: '#2563eb',
           border: '#1e40af',
           highlight: { background: '#3b82f6', border: '#2563eb' }
         },
         shape: 'box',
-        borderWidth: 3
+        borderWidth: 3,
+        font: { color: '#ffffff' }
       },
-      storage: {
+      'monitoring': {
         color: {
           background: '#16a34a',
           border: '#15803d',
@@ -320,9 +443,19 @@ const { nodes: topologyNodes, edges: topologyEdges } = portfolioData.network_top
         },
         shape: 'box',
         borderWidth: 2,
-        borderWidthSelected: 3
+        font: { color: '#ffffff' }
       },
-      application: {
+      'agent': {
+        color: {
+          background: '#8b5cf6',
+          border: '#7c3aed',
+          highlight: { background: '#a78bfa', border: '#8b5cf6' }
+        },
+        shape: 'ellipse',
+        borderWidth: 2,
+        font: { color: '#ffffff' }
+      },
+      'application': {
         color: {
           background: '#ea580c',
           border: '#c2410c',
@@ -330,7 +463,17 @@ const { nodes: topologyNodes, edges: topologyEdges } = portfolioData.network_top
         },
         shape: 'box',
         borderWidth: 2,
-        borderWidthSelected: 3
+        font: { color: '#ffffff' }
+      },
+      'workload': {
+        color: {
+          background: '#64748b',
+          border: '#475569',
+          highlight: { background: '#94a3b8', border: '#64748b' }
+        },
+        shape: 'box',
+        borderWidth: 2,
+        font: { color: '#ffffff' }
       }
     },
     physics: {
@@ -367,50 +510,49 @@ const { nodes: topologyNodes, edges: topologyEdges } = portfolioData.network_top
   network.on('selectNode', function(params) {
     if (params.nodes.length > 0) {
       const nodeId = params.nodes[0];
-      const nodeData = topologyNodes.find(n => n.id === nodeId);
+      const podData = pods.find(n => n.id === nodeId);
       
-      if (nodeData) {
+      if (podData) {
         const infoPanel = document.getElementById('node-info');
         let html = `
-          <h3>${nodeData.label}</h3>
-          <p><strong>Role:</strong> ${nodeData.title}</p>
-          <p><strong>IP Address:</strong> ${nodeData.ip}</p>
-          <p><strong>Status:</strong> ${nodeData.status}</p>
-          <div class="specs">
-            <h4 style="margin-top: 1rem; margin-bottom: 0.5rem; color: var(--secondary);">Specifications</h4>
+          <h3>${podData.label}</h3>
+          <p><strong>Type:</strong> ${podData.group.replace('-', ' ').toUpperCase()}</p>
+          <p><strong>Physical Host:</strong> ${podData.physicalNode}</p>
+          <p><strong>Host IP:</strong> ${podData.hostIP}</p>
         `;
         
-        for (const [key, value] of Object.entries(nodeData.specs)) {
-          const displayKey = key.charAt(0).toUpperCase() + key.slice(1);
-          html += `<p><strong>${displayKey}:</strong> ${value}</p>`;
+        if (podData.port) {
+          html += `<p><strong>Port:</strong> ${podData.port}</p>`;
         }
         
-        if (nodeData.services && nodeData.services.length > 0) {
-          html += `
-            <h4 style="margin-top: 1rem; margin-bottom: 0.5rem; color: var(--secondary);">Services</h4>
-            <ul style="margin-left: 1.5rem;">
-          `;
-          nodeData.services.forEach(service => {
-            const portInfo = service.port ? ` (Port: ${service.port})` : '';
-            const desc = service.description ? ` - ${service.description}` : '';
-            html += `<li>${service.name}${portInfo}${desc}</li>`;
-          });
-          html += `</ul>`;
+        if (podData.url) {
+          html += `<p><strong>Access URL:</strong> <a href="${podData.url}" target="_blank" style="color: var(--color-primary);">${podData.url}</a></p>`;
         }
         
-        if (nodeData.features && nodeData.features.length > 0) {
+        if (podData.description) {
           html += `
-            <h4 style="margin-top: 1rem; margin-bottom: 0.5rem; color: var(--secondary);">Features</h4>
-            <ul style="margin-left: 1.5rem;">
+            <div style="margin-top: 1rem;">
+              <h4 style="color: var(--secondary); margin-bottom: 0.5rem;">Description</h4>
+              <p>${podData.description}</p>
+            </div>
           `;
-          nodeData.features.forEach(feature => {
-            html += `<li>${feature}</li>`;
-          });
-          html += `</ul>`;
+        }
+        
+        // Show physical node details
+        const physNode = physicalNodes.find(n => n.label === podData.physicalNode);
+        if (physNode) {
+          html += `
+            <div style="margin-top: 1rem;">
+              <h4 style="color: var(--secondary); margin-bottom: 0.5rem;">Host Node Details</h4>
+              <p><strong>CPU:</strong> ${physNode.specs.cpu}</p>
+              <p><strong>RAM:</strong> ${physNode.specs.ram}</p>
+              <p><strong>OS:</strong> ${physNode.specs.os}</p>
+              <p><strong>Status:</strong> ${physNode.status}</p>
+            </div>
+          `;
         }
         
         html += `
-          </div>
           <a href="https://github.com/JashandeepJustinBains/VMStation" target="_blank" rel="noopener noreferrer" class="btn repo-link">
             View VMStation Repo on GitHub →
           </a>
