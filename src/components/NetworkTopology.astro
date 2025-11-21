@@ -1,12 +1,15 @@
 ---
 // Interactive GNS3-style network topology diagram
+import portfolioData from '../../portfolio-data.json';
+
+const { nodes: topologyNodes, edges: topologyEdges } = portfolioData.network_topology;
 ---
 
 <section id="homelab">
   <h2>Homelab Network Topology</h2>
   <div class="topology-container">
     <div class="topology-header">
-      <p>Interactive diagram of my personal homelab server cluster infrastructure</p>
+      <p>Interactive diagram of VMStation - A 3-node Kubernetes homelab with automated deployment, monitoring, and smart power management</p>
       <div class="topology-controls">
         <button id="resetView" class="btn-small">Reset View</button>
         <button id="togglePhysics" class="btn-small">Toggle Physics</button>
@@ -21,24 +24,37 @@
       <h4>Legend:</h4>
       <div class="legend-items">
         <div class="legend-item">
-          <span class="legend-color" style="background: #3b82f6;"></span>
-          <span>Hypervisor</span>
+          <span class="legend-color" style="background: #2563eb;"></span>
+          <span>Control Plane (Always-On)</span>
         </div>
         <div class="legend-item">
-          <span class="legend-color" style="background: #10b981;"></span>
-          <span>Storage</span>
+          <span class="legend-color" style="background: #16a34a;"></span>
+          <span>Storage Worker (Auto-Sleep)</span>
         </div>
         <div class="legend-item">
-          <span class="legend-color" style="background: #8b5cf6;"></span>
-          <span>Network Services</span>
+          <span class="legend-color" style="background: #ea580c;"></span>
+          <span>Compute Worker (Auto-Sleep)</span>
         </div>
-        <div class="legend-item">
-          <span class="legend-color" style="background: #f59e0b;"></span>
-          <span>Applications</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-color" style="background: #ef4444;"></span>
-          <span>Security</span>
+      </div>
+      <div style="margin-top: 1rem;">
+        <h4>Connection Types:</h4>
+        <div class="legend-items">
+          <div class="legend-item">
+            <div style="width: 30px; height: 2px; background: #2563eb;"></div>
+            <span>Kubernetes Control / CNI</span>
+          </div>
+          <div class="legend-item">
+            <div style="width: 30px; height: 2px; background: #16a34a; border-top: 2px dashed #16a34a;"></div>
+            <span>Prometheus Metrics</span>
+          </div>
+          <div class="legend-item">
+            <div style="width: 30px; height: 2px; background: #ea580c; border-top: 2px dashed #ea580c;"></div>
+            <span>Log Aggregation (Loki)</span>
+          </div>
+          <div class="legend-item">
+            <div style="width: 30px; height: 2px; background: #9333ea; border-top: 2px dashed #9333ea;"></div>
+            <span>Wake-on-LAN</span>
+          </div>
         </div>
       </div>
     </div>
@@ -189,183 +205,45 @@
 <script>
   import { Network } from 'vis-network/standalone';
   
-  // Define the homelab network topology
-  const nodes = [
-    // Hypervisors
-    {
-      id: 1,
-      label: 'Proxmox-01',
-      group: 'hypervisor',
-      title: 'Primary Hypervisor',
-      specs: {
-        cpu: 'Intel Xeon E5-2680 v4 (28 cores)',
-        ram: '128GB DDR4 ECC',
-        storage: '2x 1TB NVMe (RAID 1)',
-        role: 'Primary virtualization host running production VMs and containers'
-      }
-    },
-    {
-      id: 2,
-      label: 'Proxmox-02',
-      group: 'hypervisor',
-      title: 'Secondary Hypervisor',
-      specs: {
-        cpu: 'Intel Xeon E5-2670 v3 (24 cores)',
-        ram: '96GB DDR4 ECC',
-        storage: '2x 512GB NVMe (RAID 1)',
-        role: 'Secondary virtualization host for testing and development workloads'
-      }
-    },
-    // Storage
-    {
-      id: 3,
-      label: 'TrueNAS',
-      group: 'storage',
-      title: 'Network Storage',
-      specs: {
-        cpu: 'Intel Xeon E3-1230 v5',
-        ram: '32GB DDR4 ECC',
-        storage: '6x 4TB HDD (RAIDZ2) + 2x 500GB SSD (Cache)',
-        role: 'Centralized storage with NFS/SMB shares, iSCSI targets, and backups'
-      }
-    },
-    // Network Services
-    {
-      id: 4,
-      label: 'pfSense',
-      group: 'network',
-      title: 'Firewall/Router',
-      specs: {
-        cpu: '4 vCPUs',
-        ram: '8GB',
-        storage: '32GB',
-        role: 'Network gateway, firewall, VPN server, traffic shaping'
-      }
-    },
-    {
-      id: 5,
-      label: 'Pi-hole',
-      group: 'network',
-      title: 'DNS & Ad Blocker',
-      specs: {
-        cpu: '2 vCPUs',
-        ram: '2GB',
-        storage: '16GB',
-        role: 'Network-wide DNS and advertisement blocking'
-      }
-    },
-    {
-      id: 6,
-      label: 'Unifi Controller',
-      group: 'network',
-      title: 'Network Management',
-      specs: {
-        cpu: '2 vCPUs',
-        ram: '4GB',
-        storage: '20GB',
-        role: 'UniFi network device management and monitoring'
-      }
-    },
-    // Applications
-    {
-      id: 7,
-      label: 'Docker Host',
-      group: 'application',
-      title: 'Container Platform',
-      specs: {
-        cpu: '8 vCPUs',
-        ram: '16GB',
-        storage: '100GB',
-        role: 'Docker host running multiple containerized applications'
-      }
-    },
-    {
-      id: 8,
-      label: 'K8s Cluster',
-      group: 'application',
-      title: 'Kubernetes',
-      specs: {
-        cpu: '3 nodes (6 vCPUs each)',
-        ram: '12GB per node',
-        storage: '50GB per node',
-        role: 'Kubernetes cluster for container orchestration and microservices'
-      }
-    },
-    // Security & Monitoring
-    {
-      id: 9,
-      label: 'Wazuh',
-      group: 'security',
-      title: 'SIEM',
-      specs: {
-        cpu: '4 vCPUs',
-        ram: '8GB',
-        storage: '100GB',
-        role: 'Security information and event management, intrusion detection'
-      }
-    },
-    {
-      id: 10,
-      label: 'Grafana',
-      group: 'application',
-      title: 'Monitoring',
-      specs: {
-        cpu: '2 vCPUs',
-        ram: '4GB',
-        storage: '20GB',
-        role: 'Monitoring dashboards, metrics visualization, alerting'
-      }
-    },
-    // Internet
-    {
-      id: 11,
-      label: 'Internet',
-      group: 'external',
-      title: 'WAN Connection',
-      specs: {
-        connection: '1Gbps Fiber',
-        provider: 'ISP',
-        role: 'External internet connectivity'
-      }
-    }
-  ];
+  // Load VMStation homelab topology data from portfolio-data.json
+  const portfolioData = await fetch('/portfolio-data.json').then(r => r.json());
+  const { nodes: topologyNodes, edges: topologyEdges } = portfolioData.network_topology;
   
-  // Define connections between nodes
-  const edges = [
-    // Internet to pfSense
-    { from: 11, to: 4, label: 'WAN', color: { color: '#cc0000' } },
+  // Transform portfolio data nodes to vis-network format
+  const nodes = topologyNodes.map(node => ({
+    id: node.id,
+    label: node.label,
+    group: node.group,
+    title: node.title,
+    specs: {
+      ...node.specs,
+      ip: node.ip,
+      status: node.status,
+      ...node.specs
+    },
+    features: node.features,
+    services: node.services,
+    color: node.color
+  }));
+  
+  // Transform portfolio data edges to vis-network format
+  const edges = topologyEdges.map(edge => {
+    const edgeConfig: any = {
+      from: edge.from,
+      to: edge.to,
+      label: edge.label
+    };
     
-    // pfSense to everything (router/firewall)
-    { from: 4, to: 1, label: 'LAN' },
-    { from: 4, to: 2, label: 'LAN' },
-    { from: 4, to: 3, label: 'LAN' },
-    { from: 4, to: 5, label: 'DNS' },
-    { from: 4, to: 6, label: 'LAN' },
+    if (edge.color) {
+      edgeConfig.color = { color: edge.color };
+    }
     
-    // Hypervisors to storage
-    { from: 1, to: 3, label: 'iSCSI/NFS', color: { color: '#00cc99' } },
-    { from: 2, to: 3, label: 'iSCSI/NFS', color: { color: '#00cc99' } },
+    if (edge.dashes) {
+      edgeConfig.dashes = Array.isArray(edge.dashes) ? edge.dashes : true;
+    }
     
-    // VMs running on Proxmox-01
-    { from: 1, to: 7, label: 'VM', dashes: true },
-    { from: 1, to: 9, label: 'VM', dashes: true },
-    { from: 1, to: 10, label: 'VM', dashes: true },
-    
-    // K8s cluster on Proxmox-02
-    { from: 2, to: 8, label: 'VMs', dashes: true },
-    
-    // DNS connections
-    { from: 5, to: 7, label: 'DNS', color: { color: '#9900cc' }, dashes: true },
-    { from: 5, to: 8, label: 'DNS', color: { color: '#9900cc' }, dashes: true },
-    
-    // Monitoring connections
-    { from: 10, to: 1, label: 'metrics', dashes: [2, 2], color: { color: '#666666' } },
-    { from: 10, to: 2, label: 'metrics', dashes: [2, 2], color: { color: '#666666' } },
-    { from: 10, to: 3, label: 'metrics', dashes: [2, 2], color: { color: '#666666' } },
-    
-    // Security monitoring
-    { from: 9, to: 4, label: 'logs', dashes: [2, 2], color: { color: '#cc0066' } }
-  ];
+    return edgeConfig;
+  });
   
   // Create nodes for vis-network
   const visNodes = nodes.map(node => ({
@@ -427,51 +305,32 @@
     groups: {
       hypervisor: {
         color: {
-          background: '#3b82f6',
-          border: '#2563eb',
-          highlight: { background: '#60a5fa', border: '#3b82f6' }
+          background: '#2563eb',
+          border: '#1e40af',
+          highlight: { background: '#3b82f6', border: '#2563eb' }
         },
-        shape: 'box'
+        shape: 'box',
+        borderWidth: 3
       },
       storage: {
         color: {
-          background: '#10b981',
-          border: '#059669',
-          highlight: { background: '#34d399', border: '#10b981' }
+          background: '#16a34a',
+          border: '#15803d',
+          highlight: { background: '#22c55e', border: '#16a34a' }
         },
-        shape: 'box'
-      },
-      network: {
-        color: {
-          background: '#8b5cf6',
-          border: '#7c3aed',
-          highlight: { background: '#a78bfa', border: '#8b5cf6' }
-        },
-        shape: 'box'
+        shape: 'box',
+        borderWidth: 2,
+        borderWidthSelected: 3
       },
       application: {
         color: {
-          background: '#f59e0b',
-          border: '#d97706',
-          highlight: { background: '#fbbf24', border: '#f59e0b' }
+          background: '#ea580c',
+          border: '#c2410c',
+          highlight: { background: '#f97316', border: '#ea580c' }
         },
-        shape: 'box'
-      },
-      security: {
-        color: {
-          background: '#ef4444',
-          border: '#dc2626',
-          highlight: { background: '#f87171', border: '#ef4444' }
-        },
-        shape: 'box'
-      },
-      external: {
-        color: {
-          background: '#64748b',
-          border: '#475569',
-          highlight: { background: '#94a3b8', border: '#64748b' }
-        },
-        shape: 'diamond'
+        shape: 'box',
+        borderWidth: 2,
+        borderWidthSelected: 3
       }
     },
     physics: {
@@ -508,25 +367,52 @@
   network.on('selectNode', function(params) {
     if (params.nodes.length > 0) {
       const nodeId = params.nodes[0];
-      const node = nodes.find(n => n.id === nodeId);
+      const nodeData = topologyNodes.find(n => n.id === nodeId);
       
-      if (node) {
+      if (nodeData) {
         const infoPanel = document.getElementById('node-info');
         let html = `
-          <h3>${node.label}</h3>
-          <p><strong>Role:</strong> ${node.title}</p>
+          <h3>${nodeData.label}</h3>
+          <p><strong>Role:</strong> ${nodeData.title}</p>
+          <p><strong>IP Address:</strong> ${nodeData.ip}</p>
+          <p><strong>Status:</strong> ${nodeData.status}</p>
           <div class="specs">
+            <h4 style="margin-top: 1rem; margin-bottom: 0.5rem; color: var(--secondary);">Specifications</h4>
         `;
         
-        for (const [key, value] of Object.entries(node.specs)) {
+        for (const [key, value] of Object.entries(nodeData.specs)) {
           const displayKey = key.charAt(0).toUpperCase() + key.slice(1);
           html += `<p><strong>${displayKey}:</strong> ${value}</p>`;
         }
         
+        if (nodeData.services && nodeData.services.length > 0) {
+          html += `
+            <h4 style="margin-top: 1rem; margin-bottom: 0.5rem; color: var(--secondary);">Services</h4>
+            <ul style="margin-left: 1.5rem;">
+          `;
+          nodeData.services.forEach(service => {
+            const portInfo = service.port ? ` (Port: ${service.port})` : '';
+            const desc = service.description ? ` - ${service.description}` : '';
+            html += `<li>${service.name}${portInfo}${desc}</li>`;
+          });
+          html += `</ul>`;
+        }
+        
+        if (nodeData.features && nodeData.features.length > 0) {
+          html += `
+            <h4 style="margin-top: 1rem; margin-bottom: 0.5rem; color: var(--secondary);">Features</h4>
+            <ul style="margin-left: 1.5rem;">
+          `;
+          nodeData.features.forEach(feature => {
+            html += `<li>${feature}</li>`;
+          });
+          html += `</ul>`;
+        }
+        
         html += `
           </div>
-          <a href="https://github.com/JashandeepJustinBains/homelab" target="_blank" rel="noopener noreferrer" class="btn repo-link">
-            View Homelab Repo on GitHub →
+          <a href="https://github.com/JashandeepJustinBains/VMStation" target="_blank" rel="noopener noreferrer" class="btn repo-link">
+            View VMStation Repo on GitHub →
           </a>
         `;
         
